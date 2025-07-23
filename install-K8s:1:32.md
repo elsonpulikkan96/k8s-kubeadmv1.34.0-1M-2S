@@ -88,6 +88,7 @@ sudo sysctl --system
 
 ```sh
 # control-plane, node-1 and node-2
+
 sudo apt-get update && sudo apt-get upgrade -y
 
 sudo apt install -y containerd
@@ -135,9 +136,10 @@ Install kubeadm, kubelet and kubectl tools and hold their package version on the
 ```sh
 # control-plane, node-1 and node-2
 
-sudo apt update
+sudo apt-get update && sudo apt-get upgrade -y
 
-sudo apt install -y kubeadm=1.32.0-1.1 kubelet=1.32.0-1.1 kubectl=1.32.0-1.1
+sudo apt install -y kubeadm=1.33.0-1.1 kubelet=1.33.0-1.1 kubectl=1.33.0-1.1
+
 sudo apt-mark hold kubeadm kubelet kubectl
 
 ```
@@ -175,7 +177,7 @@ Install the Calico network addon to the cluster and verify the status of the nod
 ```sh
 # control-plane
 
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.3/manifests/calico.yaml
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/calico.yaml
 ```
 
 ```sh
