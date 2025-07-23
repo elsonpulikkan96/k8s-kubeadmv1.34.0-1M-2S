@@ -269,13 +269,6 @@ curl -i http://localhost:8080
 HTTP/1.1 200 OK
 Server: nginx/1.25.3
 
-```
-```sh
-```
-```sh
-```
-
-
 * Reference
 https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 
