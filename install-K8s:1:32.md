@@ -146,7 +146,7 @@ sudo apt-mark hold kubeadm kubelet kubectl
 
 ```sh
 # control-plane
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.32.0
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.33.0
 ```
 Once the installation is completed, set up our access to the cluster on the control plane
 
@@ -166,11 +166,11 @@ But our nodes are in a NotReady state because we haven’t set up networking.
 
 kubectl get nodes
 NAME            STATUS     ROLES           AGE   VERSION
-control-plane   NotReady   control-plane   45s   v1.32.0
+control-plane   NotReady   control-plane   45s   v1.33.0
 
 kubectl get nodes -o wide
 NAME            STATUS     ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION   CONTAINER-RUNTIME
-control-plane   NotReady   control-plane   52s   v1.32.0   172.31.81.34   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
+control-plane   NotReady   control-plane   52s   v1.33.0   172.31.81.34   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
 ```
 Install the Calico network addon to the cluster and verify the status of the nodes
 
@@ -197,7 +197,7 @@ kube-scheduler-control-plane               1/1     Running   0          4m32s
 
 kubectl get nodes
 NAME            STATUS   ROLES           AGE     VERSION
-control-plane   Ready    control-plane   4m53s   v1.32.0
+control-plane   Ready    control-plane   4m53s   v1.33.0
 ```
 Once the networking is enabled, join our workload nodes to the cluster
 Get the join command from the control plane using kubeadm
@@ -224,15 +224,15 @@ Verify our cluster and all the nodes will be in a Ready state on your control pl
 
 kubectl get nodes
 NAME            STATUS   ROLES           AGE     VERSION
-control-plane   Ready    control-plane   7m50s   v1.32.0
-node-1          Ready    <none>          76s     v1.32.0
-node-2          Ready    <none>          79s     v1.32.0
+control-plane   Ready    control-plane   7m50s   v1.33.0
+node-1          Ready    <none>          76s     v1.33.0
+node-2          Ready    <none>          79s     v1.33.0
 
 kubectl get nodes -o wide
 NAME            STATUS   ROLES           AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION   CONTAINER-RUNTIME
-control-plane   Ready    control-plane   8m12s   v1.32.0   172.31.81.34   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
-node-1          Ready    <none>          98s     v1.32.0   172.31.81.93   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
-node-2          Ready    <none>          101s    v1.32.0   172.31.90.71   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
+control-plane   Ready    control-plane   8m12s   v1.33.0   172.31.81.34   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
+node-1          Ready    <none>          98s     v1.33.0   172.31.81.93   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
+node-2          Ready    <none>          101s    v1.33.0   172.31.90.71   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
 
 ```
 
