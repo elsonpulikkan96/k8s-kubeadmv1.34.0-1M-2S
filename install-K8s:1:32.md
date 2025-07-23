@@ -88,7 +88,7 @@ sudo sysctl --system
 
 ```sh
 # control-plane, node-1 and node-2
-sudo apt update
+sudo apt-get update && sudo apt-get upgrade -y
 
 sudo apt install -y containerd
 ```
