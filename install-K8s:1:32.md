@@ -90,7 +90,7 @@ sudo sysctl --system
 # control-plane, node-1 and node-2
 sudo apt update
 
-sudo apt install -y contained
+sudo apt install -y containerd
 ```
 Once the packages are installed, generate a default configuration file for containerd on the control plane, node-1 and node-2
 
