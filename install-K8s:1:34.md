@@ -2,7 +2,7 @@
 
 **Introduction**
 
-This guide explains how to set up a three-node Kubernetes v1.33 (latest) cluster using kubeadm. Kubernetes is a container orchestration platform, and Kubeadm is a tool used to create and manage Kubernetes clusters.
+This guide explains how to set up a three-node Kubernetes v1.34 (latest) cluster using kubeadm. Kubernetes is a container orchestration platform, and Kubeadm is a tool used to create and manage Kubernetes clusters.
 
 **What is kubeadm?**
 
@@ -14,7 +14,7 @@ It automates the creation of Kubernetes clusters by bootstrapping the control pl
 
 Before setting up the Kubernetes cluster, ensure the following prerequisites are met:
 
-* Create three Ubuntu 22.04 LTS instances for the control plane, node-1, and node-2.
+* Create three Ubuntu 24.04 LTS instances for the control plane, node-1, and node-2.
 
 * Each instance must have a minimum specification of 2 CPUs and 2 GB RAM.
 
@@ -41,9 +41,7 @@ sudo hostnamectl set-hostname k8s-worker-node-1
 # node-2
 sudo hostnamectl set-hostname k8s-worker-node-2
 ```
-Update the hosts file on the control plane, node-1 and node-2 to enable communication via hostnames
-
-
+Update the hosts file on the control plane with Private IP addresses of Control-plane, node-1 and node-2 to enable communication via hostnames
 ```sh
 # control-plane, node-1 and node-2
 sudo tee /etc/hosts <<'EOF'
