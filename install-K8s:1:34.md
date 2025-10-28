@@ -55,8 +55,7 @@ Disable swap on the control plane, node-1 and node-2 and if a swap entry is pres
 ```sh
 # control-plane, node-1 and node-2
 sudo swapoff -a
-sudo vi /etc/fstab
-  # comment out swap entry
+sudo sed -i '/ swap / s/^/#/' /etc/fstab
 ```
 To set containerd as our container runtime on the control plane, node-1 and node-2, first, we need to load some Kernel modules and modify system settings
 
@@ -144,11 +143,12 @@ sudo apt-mark hold kubeadm kubelet kubectl
 kubeadm version
 kubectl version --client
 kubelet --version
+systemctl daemon-reload
 ```
 Initialise Control Plane
 ```sh
 # control-plane
-Initialize Control Plane (on k8s-control-plane)
+Initialise Control Plane (on k8s-control-plane)
 ```
 Once the installation is completed, set up our access to the cluster on the control plane
 
