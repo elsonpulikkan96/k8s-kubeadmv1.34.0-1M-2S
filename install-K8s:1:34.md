@@ -149,6 +149,9 @@ Initialise Control Plane
 ```sh
 # control-plane
 Initialise Control Plane (on k8s-control-plane)
+
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --kubernetes-version=1.34.0
+
 ```
 Once the installation is completed, set up our access to the cluster on the control plane
 
@@ -194,7 +197,7 @@ Get the join command from the control plane using kubeadm
 kubeadm token create --print-join-command
 
 ```
-Once the join command is retrieved from the control plane, execute it in node-1 and node-2
+Once the join command is retrieved from the control plane, execute the generate values on node-1 and node-2
 
 
 ```sh
@@ -223,8 +226,7 @@ kube-proxy-s44zn                            1/1     Running   0          44m
 kube-scheduler-k8s-control-plane            1/1     Running   0          44m
 ```
 
-For testing an Application Deployment, We can deploy a Wordpress pod, expose it as ClusterIP and verify its status.
-
+For testing an Application Deployment, we can deploy a Nginx
 ```sh
 # control-plane
 
