@@ -6,7 +6,7 @@ This guide explains how to set up a three-node Kubernetes v1.33 (latest) cluster
 
 **What is kubeadm?**
 
-kubeadm is a tool used to create Kubernetes clusters.
+Kubeadm is a tool used to create Kubernetes clusters.
 
 It automates the creation of Kubernetes clusters by bootstrapping the control plane, joining the nodes, etc. Follows the Kubernetes release cycle and Open-source tool maintained by the Kubernetes community.
 
@@ -29,27 +29,28 @@ Before setting up the Kubernetes cluster, ensure the following prerequisites are
 
 ```sh
 # control-plane-node
-sudo hostnamectl set-hostname control-plane
+sudo hostnamectl set-hostname k8s-control-plane
 ```
 
 ```sh
 # node-1
-sudo hostnamectl set-hostname node-1
+sudo hostnamectl set-hostname k8s-worker-node-1
 ```
 
 ```sh
 # node-2
-sudo hostnamectl set-hostname node-2
+sudo hostnamectl set-hostname k8s-worker-node-2
 ```
 Update the hosts file on the control plane, node-1 and node-2 to enable communication via hostnames
 
 
 ```sh
 # control-plane, node-1 and node-2
-sudo vi /etc/hosts
-172.31.81.34 control-plane
-172.31.81.93 node-1
-172.31.90.71 node-2
+sudo tee /etc/hosts <<'EOF'
+10.0.175.226 k8s-control-plane
+10.0.245.172 k8s-worker-node-1
+10.0.84.109  k8s-worker-node-2
+EOF
 ```
 Disable swap on the control plane, node-1 and node-2 and if a swap entry is present in the fstab file then comment out the line
 
@@ -120,33 +121,36 @@ sudo apt update
 sudo apt install -y apt-transport-https ca-certificates curl gpg
 
 ```
-Download the public signing key for Kubernetes package repository on the control plane, node-1 and node-2
+Download the public signing key for the Kubernetes V1.34 package repository on the control plane, node-1 and node-2
 
 ```sh
 # control-plane, node-1 and node-2
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+****
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key \
+ | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 ```
 Add the appropriate Kubernetes apt repository on the control plane, node-1 and node-2
 ```sh
 # control-plane, node-1 and node-2
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /' \
+ | sudo tee /etc/apt/sources.list.d/kubernetes.list
 ```
 Install kubeadm, kubelet and kubectl tools and hold their package version on the control plane, node-1 and node-2
 
 ```sh
 # control-plane, node-1 and node-2
 
-sudo apt-get update && sudo apt-get upgrade -y
-
-sudo apt install -y kubeadm=1.33.0-1.1 kubelet=1.33.0-1.1 kubectl=1.33.0-1.1
-
+sudo apt update
+sudo apt install -y kubeadm=1.34.0-1.1 kubelet=1.34.0-1.1 kubectl=1.34.0-1.1
 sudo apt-mark hold kubeadm kubelet kubectl
-
+kubeadm version
+kubectl version --client
+kubelet --version
 ```
-
+Initialise Control Plane
 ```sh
 # control-plane
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=1.33.0
+Initialize Control Plane (on k8s-control-plane)
 ```
 Once the installation is completed, set up our access to the cluster on the control plane
 
@@ -162,42 +166,26 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 Verify our cluster status by listing the nodes
 But our nodes are in a NotReady state because we haven’t set up networking.
 ```sh
-# control-plane
+root@k8s-control-plane:~# kubectl get nodes -o wide
+NAME                STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION    CONTAINER-RUNTIME
+k8s-control-plane   Ready    control-plane   41m   v1.34.1   10.0.175.226   <none>        Ubuntu 24.04.3 LTS   6.14.0-1011-aws   containerd://1.7.28
+worker-node-1       Ready    <none>          33m   v1.34.0   10.0.245.172   <none>        Ubuntu 24.04.3 LTS   6.14.0-1011-aws   containerd://1.7.28
+worker-node-2       Ready    <none>          29m   v1.34.0   10.0.84.109    <none>        Ubuntu 24.04.3 LTS   6.14.0-1011-aws   containerd://1.7.28
 
-kubectl get nodes
-NAME            STATUS     ROLES           AGE   VERSION
-control-plane   NotReady   control-plane   45s   v1.33.0
 
-kubectl get nodes -o wide
-NAME            STATUS     ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION   CONTAINER-RUNTIME
-control-plane   NotReady   control-plane   52s   v1.33.0   172.31.81.34   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
+
 ```
 Install the Calico network addon to the cluster and verify the status of the nodes
 
 ```sh
 # control-plane
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.31.0/manifests/calico.yaml
+kubectl -n kube-system get pods -o wide | grep calico
 
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/calico.yaml
 ```
 
 ```sh
-# control-plane
 
-kubectl -n kube-system get pods
-NAME                                       READY   STATUS    RESTARTS   AGE
-calico-kube-controllers-7c968b5878-x5trl   1/1     Running   0          46s
-calico-node-grrf4                          1/1     Running   0          46s
-coredns-76f75df574-cdcj2                   1/1     Running   0          4m19s
-coredns-76f75df574-z4gxg                   1/1     Running   0          4m19s
-etcd-control-plane                         1/1     Running   0          4m32s
-kube-apiserver-control-plane               1/1     Running   0          4m34s
-kube-controller-manager-control-plane      1/1     Running   0          4m32s
-kube-proxy-78gqq                           1/1     Running   0          4m19s
-kube-scheduler-control-plane               1/1     Running   0          4m32s
-
-kubectl get nodes
-NAME            STATUS   ROLES           AGE     VERSION
-control-plane   Ready    control-plane   4m53s   v1.33.0
 ```
 Once the networking is enabled, join our workload nodes to the cluster
 Get the join command from the control plane using kubeadm
@@ -217,42 +205,43 @@ Once the join command is retrieved from the control plane, execute it in node-1 
 sudo kubeadm join 172.31.81.34:6443 --token kvzidi.g65h3s8psp2h3dc6 --discovery-token-ca-cert-hash sha256:56c208595372c1073b47fa47e8de65922812a6ec322d938bd5ac64d8966c1f27
 
 ```
-Verify our cluster and all the nodes will be in a Ready state on your control plane instance.
+Verify our cluster and all the nodes and pods will be in a Ready and Running state on your control plane instance.
 
 ```sh
-# control-plane
-
-kubectl get nodes
-NAME            STATUS   ROLES           AGE     VERSION
-control-plane   Ready    control-plane   7m50s   v1.33.0
-node-1          Ready    <none>          76s     v1.33.0
-node-2          Ready    <none>          79s     v1.33.0
-
-kubectl get nodes -o wide
-NAME            STATUS   ROLES           AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION   CONTAINER-RUNTIME
-control-plane   Ready    control-plane   8m12s   v1.33.0   172.31.81.34   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
-node-1          Ready    <none>          98s     v1.33.0   172.31.81.93   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
-node-2          Ready    <none>          101s    v1.33.0   172.31.90.71   <none>        Ubuntu 22.04.3 LTS   6.2.0-1012-aws   containerd://1.7.2
-
+root@k8s-control-plane:~# kubectl -n kube-system get pods
+NAME                                        READY   STATUS    RESTARTS   AGE
+calico-kube-controllers-5766bdd7c-7l22g     1/1     Running   0          42m
+calico-node-7w99x                           1/1     Running   0          42m
+calico-node-nvlcd                           1/1     Running   0          32m
+calico-node-qng68                           1/1     Running   0          35m
+coredns-66bc5c9577-cfztq                    1/1     Running   0          43m
+coredns-66bc5c9577-q7b8c                    1/1     Running   0          43m
+etcd-k8s-control-plane                      1/1     Running   0          44m
+kube-apiserver-k8s-control-plane            1/1     Running   0          44m
+kube-controller-manager-k8s-control-plane   1/1     Running   0          44m
+kube-proxy-jpcvp                            1/1     Running   0          32m
+kube-proxy-rz7pm                            1/1     Running   0          35m
+kube-proxy-s44zn                            1/1     Running   0          44m
+kube-scheduler-k8s-control-plane            1/1     Running   0          44m
 ```
-
 
 For testing an Application Deployment, We can deploy a Wordpress pod, expose it as ClusterIP and verify its status.
 
 ```sh
 # control-plane
 
-kubectl run nginx --image=nginx --port=80 --expose
+root@k8s-control-plane:~# kubectl run nginx --image=nginx --port=80 --expose
 service/nginx created
 pod/nginx created
 
-kubectl get pods nginx -o wide
-NAME    READY   STATUS    RESTARTS   AGE   IP              NODE     NOMINATED NODE   READINESS GATES
-nginx   1/1     Running   0          34s   192.168.247.1   node-2   <none>           <none>
 
-kubectl get svc nginx
-NAME    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-nginx   ClusterIP   10.102.86.253   <none>        80/TCP    56s
+root@k8s-control-plane:~# kubectl get pods nginx -o wide
+NAME    READY   STATUS    RESTARTS   AGE   IP              NODE            NOMINATED NODE   READINESS GATES
+nginx   1/1     Running   0          6s    10.244.212.65   worker-node-1   <none>           <none>
+
+root@k8s-control-plane:~# kubectl get svc nginx
+NAME    TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+nginx   ClusterIP   10.109.8.74   <none>        80/TCP    57
 
 ```
 Access the Nginx default page using port forwarding in the control plane
@@ -261,16 +250,20 @@ Access the Nginx default page using port forwarding in the control plane
 ```sh
 # control-plane
 
-kubectl port-forward svc/nginx 8080:80
-Forwarding from 127.0.0.1:8080 -> 80
-Forwarding from [::1]:8080 -> 80
+root@k8s-control-plane:~# kubectl port-forward svc/nginx 8080:80 >/dev/null 2>&1 & sleep 1
+[1] 33490
 
-curl -i http://localhost:8080
+root@k8s-control-plane:~# curl -I http://localhost:8080
 HTTP/1.1 200 OK
-Server: nginx/1.25.3
+Server: nginx/1.29.2
+Date: Tue, 28 Oct 2025 00:05:57 GMT
+Content-Type: text/html
+Content-Length: 615
+Last-Modified: Tue, 07 Oct 2025 17:04:07 GMT
+Connection: keep-alive
+ETag: "68e54807-267"
+Accept-Ranges: bytes
 
 * Reference
 https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-
-
 
